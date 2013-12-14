@@ -1,24 +1,52 @@
-(ns parsero.core)
+(ns parsero.core
+  (:require [clojure.algo.monads :refer [defmonad domonad defmonadfn m-chain]]))
 
-; Parser a = Parser (String -> [(a, String)])
-;   Parser [s -> (a , s')]
-;   s : input string
-;   a : parsed value from the prefix of `s`
-;   s': unparsed suffix of `s`
-;
-; A parser is a function that takes a string of characters as its argument, and
-; returns a list of results.
+; The parser monad
 
-; `nil` will be used to denote the failure of the parser and the non-empty list
-; will represent success.
+(defn- m-result-parser
+  [v]
+  (fn [s] (list v s)))
 
-(def parse first)
+(defn- m-bind-parser
+  [p f]
+  (fn [s]
+    (let [result (p s)]
+      (when (not= nil result)
+        (let [np (f (first result))]
+          (np (second result)))))))
 
-(defn item
+(defn- m-zero-parser
+  [s]
+  nil)
+
+(defn- m-plus-parser
+  [& ps]
+  (fn [s]
+    (first
+      (drop-while nil?
+        (map #(% s) ps)))))
+
+(defmonad parser-m
+  [m-result m-result-parser
+   m-bind   m-bind-parser
+   m-zero   m-zero-parser
+   m-plus   m-plus-parser])
+
+; 
+
+(defn any-char
   "Accepts a single character."
   [s]
   (if (empty? s)
     nil
-    [(first s) (rest s)]))
+    (list (first s) (.substring s 1))))
 
-(parse (item "Foo")) ; \F
+(defn char-satisfies
+  [p]
+  (domonad parser-m
+    [x any-char
+     :when (p x)]
+    x))
+
+;(def is-c (char-satisfies #(= % \c)))
+;(is-c "color")
