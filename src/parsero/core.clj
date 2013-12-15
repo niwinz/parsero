@@ -68,8 +68,17 @@
       (str x xs))
     (m-result-parser "")))
 
-(def word (many letter))
-(def number (many digit))
+(defn many1
+  "Like `many` but it fails if the given
+  parser doesn't succeed at least once."
+  [p]
+  (domonad parser-m
+    [x p
+     xs (many p)]
+    (str x xs)))
+
+(def word (many1 letter))
+(def number (many1 digit))
 
 (defn string
   "Create a parser that parses the given string."
