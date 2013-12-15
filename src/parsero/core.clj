@@ -56,12 +56,20 @@
 (def letter (m-plus-parser lower upper))
 (def alphanumeric (m-plus-parser letter digit))
 
-(def word
-  (m-plus-parser (domonad parser-m
-                    [x letter
-                     xs word]
-                    (str x xs))
-                 (m-result-parser "")))
+(defn many
+  "Given a parser, return another that
+  tries to apply it to the input string
+  as many times as possible."
+  [p]
+  (m-plus-parser
+    (domonad parser-m
+      [x p
+       xs (many p)]
+      (str x xs))
+    (m-result-parser "")))
+
+(def word (many letter))
+(def number (many digit))
 
 (defn string
   "Create a parser that parses the given string."
