@@ -1,5 +1,5 @@
 (ns parsero.core
-  (:require [clojure.algo.monads :refer [defmonad domonad defmonadfn m-chain]])
+  (:require [clojure.algo.monads :refer [defmonad domonad]])
   (:import [java.lang Character]))
 
 ; The parser monad
