@@ -1,5 +1,6 @@
 (ns parsero.core
-  (:require [clojure.algo.monads :refer [defmonad domonad defmonadfn m-chain]]))
+  (:require [clojure.algo.monads :refer [defmonad domonad defmonadfn m-chain]])
+  (:import [java.lang Character]))
 
 ; The parser monad
 
@@ -48,5 +49,6 @@
      :when (p x)]
     x))
 
-;(def is-c (char-satisfies #(= % \c)))
-;(is-c "color")
+(def is-digit? (char-satisfies #(Character/isDigit %)))
+(def is-lower? (char-satisfies #(Character/isLowerCase %)))
+(def is-upper? (char-satisfies #(Character/isUpperCase %)))
