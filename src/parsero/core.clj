@@ -1,5 +1,5 @@
 (ns parsero.core
-  (:require [clojure.algo.monads :refer [defmonad domonad]])
+  (:require [clojure.algo.monads :refer [defmonad domonad m-plus]])
   (:import [java.lang Character]))
 
 ; The parser monad
@@ -49,6 +49,27 @@
      :when (p x)]
     x))
 
-(def is-digit? (char-satisfies #(Character/isDigit %)))
-(def is-lower? (char-satisfies #(Character/isLowerCase %)))
-(def is-upper? (char-satisfies #(Character/isUpperCase %)))
+(def digit (char-satisfies #(Character/isDigit %)))
+(def lower (char-satisfies #(Character/isLowerCase %)))
+(def upper (char-satisfies #(Character/isUpperCase %)))
+
+(def letter (m-plus-parser lower upper))
+(def alphanumeric (m-plus-parser letter digit))
+
+(def word
+  (m-plus-parser (domonad parser-m
+                    [x letter
+                     xs word]
+                    (str x xs))
+                 (m-result-parser "")))
+
+(defn string
+  "Create a parser that parses the given string."
+  [s]
+  (if (empty? s)
+    (m-result-parser "")
+    (let [char-p (char-satisfies #(= (first s) %))]
+      (domonad parser-m
+        [x char-p
+         xs (string (.substring s 1))]
+        (str x xs)))))
