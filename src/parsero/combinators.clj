@@ -11,10 +11,10 @@
     (list (first s) (.substring s 1))))
 
 (defn char-satisfies
-  [p]
+  [pred]
   (domonad parser-m
     [x any-char
-     :when (p x)]
+     :when (pred x)]
     x))
 
 (def digit (char-satisfies #(Character/isDigit %)))
