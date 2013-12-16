@@ -1,7 +1,9 @@
 (ns parsero.combinators-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest testing is]]
             [parsero.core :refer [parse parse-error?]]
-            [parsero.combinators :refer :all]))
+            [parsero.combinators :refer [any-char is-char letter digit many many1 sep-by sep-by1 surrounded-by]]))
+
+(def comma (is-char \,))
 
 (deftest is-char-test
   (testing "The parser that parses any character"
@@ -19,11 +21,15 @@
 
 (deftest sep-by-test
   (testing "A combinator that takes yields the result of a parser while discarding the separator at least once until it fails"
-    (is (= '((\A) " ") (parse (sep-by letter digit) "A ")))))
+    (is (= '((\A) " ") (parse (sep-by letter comma) "A ")))
+    (is (= '((\A \b) "") (parse (sep-by letter comma) "A,b")))))
 
 (deftest sep-by1-test
   (testing "A combinator that takes yields the result of a parser while discarding the separator at least once until it fails"
-    (is (parse-error? (parse (sep-by1 letter (is-char \,)) "A"))))
-    (is (= '((\A \b \c) "") (parse (sep-by1 letter (is-char \,)) "A,b,c"))))
+    (is (parse-error? (parse (sep-by1 letter comma) "A"))))
+    (is (= '((\A \b \c) "") (parse (sep-by1 letter comma) "A,b,c"))))
 
-(run-tests)
+(deftest surrounded-by-test
+  (testing "A combinator that consumes a prefix and suffix ignoring them"
+    (is (parse-error? (parse (surrounded-by comma letter comma) ",A")))
+    (is (= '(\A "") (parse (surrounded-by comma letter comma) ",A,")))))

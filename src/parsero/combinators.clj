@@ -75,21 +75,28 @@
          xs (string (.substring s 1))]
         (str x xs)))))
 
-(defn sep-by1
-  [p sep-p]
+(defn drop-first
+  [fp sp]
   (domonad parser-m
-    [x p
-     xs (many (domonad parser-m
-                [_ sep-p
-                 y p]
-                 y))]
-    (cons x xs)))
+    [_ fp
+     x sp]
+     x))
 
 (defn sep-by
   [p sep-p]
   (m-plus-parser
-    (sep-by1 p sep-p)
+    (domonad parser-m
+      [x p
+       xs (many (drop-first sep-p p))]
+      (cons x xs))
     (m-result-parser [])))
+
+(defn sep-by1
+  [p sep-p]
+  (domonad parser-m
+    [x p
+     xs (many1 (drop-first sep-p p))]
+    (cons x xs)))
 
 (defn surrounded-by
   [prefix-p p suffix-p]
