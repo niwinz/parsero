@@ -21,7 +21,6 @@
   [^Character c]
   (char-satisfies #(= c %)))
 
-; TODO: make it return a number instead of char
 (def digit (char-satisfies #(Character/isDigit %)))
 (def lower (char-satisfies #(Character/isLowerCase %)))
 (def upper (char-satisfies #(Character/isUpperCase %)))
@@ -50,12 +49,20 @@
     (cons x xs)))
 
 (def word (many1 letter))
-; TODO: make it return a number instead of char
-(def number
+
+(def unsigned-number
   (domonad parser-m
     [digits (many1 digit)]
     (reduce #(+ (* 10 %1) %2)
       (map #(- (int %) (int \0)) digits))))
+
+(def number
+  (m-plus-parser
+    (domonad parser-m
+      [_ (is-char \-)
+       n unsigned-number]
+       (- n))
+    unsigned-number))
 
 (defn string
   "Create a parser that parses the given string."
