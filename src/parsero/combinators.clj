@@ -17,6 +17,11 @@
      :when (pred x)]
     x))
 
+(defn is-char
+  [^Character c]
+  (char-satisfies #(= c %)))
+
+; TODO: make it return a number instead of char
 (def digit (char-satisfies #(Character/isDigit %)))
 (def lower (char-satisfies #(Character/isLowerCase %)))
 (def upper (char-satisfies #(Character/isUpperCase %)))
@@ -45,6 +50,7 @@
     (cons x xs)))
 
 (def word (many1 letter))
+; TODO: make it return a number instead of char
 (def number (many1 digit))
 
 (defn string
@@ -77,8 +83,8 @@
      x))
 
 ;(def int-list
-  ;(surrounded-by (char-satisfies #(= % \[))
-                 ;(sep-by1 number (char-satisfies #(= % \,)))
-                 ;(char-satisfies #(= % \]))))
+  ;(surrounded-by (is-char \[)
+                 ;(sep-by1 number (is-char \,))
+                 ;(is-char \])))
 
-;(int-list "[1,2,3,4]")
+;(int-list "[112,2,3,4]   ")
