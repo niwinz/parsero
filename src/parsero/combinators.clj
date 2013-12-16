@@ -85,6 +85,12 @@
                  y))]
     (cons x xs)))
 
+(defn sep-by
+  [p sep-p]
+  (m-plus-parser
+    (sep-by1 p sep-p)
+    (m-result-parser [])))
+
 (defn surrounded-by
   [prefix-p p suffix-p]
   (domonad parser-m
