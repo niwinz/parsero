@@ -51,7 +51,11 @@
 
 (def word (many1 letter))
 ; TODO: make it return a number instead of char
-(def number (many1 digit))
+(def number
+  (domonad parser-m
+    [digits (many1 digit)]
+    (reduce #(+ (* 10 %1) %2)
+      (map #(- (int %) (int \0)) digits))))
 
 (defn string
   "Create a parser that parses the given string."
@@ -81,10 +85,3 @@
      x p
      _ suffix-p]
      x))
-
-;(def int-list
-  ;(surrounded-by (is-char \[)
-                 ;(sep-by1 number (is-char \,))
-                 ;(is-char \])))
-
-;(int-list "[112,2,3,4]   ")
