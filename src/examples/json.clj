@@ -3,6 +3,7 @@
   (:require [parsero.core :refer [parser-m m-plus-parser]])
   (:require [parsero.combinators :refer [char-satisfies is-char any-char many sep-by number string]]))
 
+; TODO ignore whitespace
 
 (def parse-json-quotation-mark (is-char \"))
 
