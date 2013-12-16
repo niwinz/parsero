@@ -1,7 +1,6 @@
 (ns parsero.combinators
   (:require [clojure.algo.monads :refer [domonad]])
-  (:require [parsero.core :refer [parser-m m-plus-parser m-result-parser m-result-parser]])
-  (:import [java.lang Character]))
+  (:require [parsero.core :refer [parser-m m-plus-parser m-result-parser m-result-parser]]))
 
 
 (defn any-char
