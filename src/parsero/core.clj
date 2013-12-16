@@ -40,5 +40,6 @@
 (defn parse
   [p s]
   (let [r (p s)]
-    (when-not (parse-error? r))
-    r))
+    (if-not (parse-error? r)
+      (first r)
+      r)))
