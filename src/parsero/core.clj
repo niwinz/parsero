@@ -1,6 +1,7 @@
 (ns parsero.core
   (:require [clojure.algo.monads :refer [defmonad]]))
 
+(def parse-error? (partial = ::parse-error))
 
 (defn m-result-parser
   [v]
@@ -10,20 +11,23 @@
   [p f]
   (fn [s]
     (let [result (p s)]
-      (when (not= nil result)
+      (if-not (parse-error? result)
         (let [np (f (first result))]
-          (np (second result)))))))
+          (np (second result)))
+        ::parse-error))))
 
 (defn m-zero-parser
   [s]
-  nil)
+  ::parse-error)
 
 (defn m-plus-parser
   [& ps]
   (fn [s]
-    (first
-      (drop-while nil?
-        (map #(% s) ps)))))
+    (let [pvs (map #(% s) ps)
+          v (first (drop-while parse-error? pvs))]
+      (if (nil? v)
+        ::parse-error
+        v))))
 
 (defmonad parser-m
   [m-result m-result-parser

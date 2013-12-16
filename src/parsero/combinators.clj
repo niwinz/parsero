@@ -1,13 +1,13 @@
 (ns parsero.combinators
   (:require [clojure.algo.monads :refer [domonad]])
-  (:require [parsero.core :refer [parser-m m-plus-parser m-result-parser m-result-parser]]))
+  (:require [parsero.core :refer [parser-m m-plus-parser m-result-parser m-zero-parser]]))
 
 
 (defn any-char
   "Accepts a single character."
   [s]
   (if (empty? s)
-    nil
+    (m-zero-parser s)
     (list (first s) (.substring s 1))))
 
 (defn char-satisfies
