@@ -54,6 +54,20 @@
      _ (is-char \")]
     s))
 
+(def json-number-sign
+  (one-of
+    (parser
+      [_ (is-char \-)]
+      -)
+    (gives identity)))
+
+(def json-number-integral
+  (one-of
+    (parser
+      [_ (is-char \0)]
+      0)
+    number))
+
 (def json-number-fraction
   (one-of
     (parser
@@ -72,20 +86,6 @@
       (fn [r]
         (* r (Math/pow 10 n))))
     (gives identity)))
-
-(def json-number-sign
-  (one-of
-    (parser
-      [_ (is-char \-)]
-      -)
-    (gives identity)))
-
-(def json-number-integral
-  (one-of
-    (parser
-      [_ (is-char \0)]
-      0)
-    number))
 
 (def json-number
   (parser
