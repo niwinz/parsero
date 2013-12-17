@@ -1,9 +1,8 @@
 (ns examples.json
   (:require [clojure.algo.monads :refer [domonad]])
   (:require [parsero.core :refer [parser-m m-plus-parser]])
-  (:require [parsero.combinators :refer [char-satisfies is-char any-char many sep-by number string]]))
+  (:require [parsero.combinators :refer [char-satisfies is-char any-char many sep-by number string skip-many surrounded-by]]))
 
-; TODO ignore whitespace
 
 (def parse-json-quotation-mark (is-char \"))
 
@@ -59,6 +58,13 @@
 ; TODO: JSON standard compliant
 (def parse-json-number number)
 
+(def json-whitespace-chars #{\space \tab \newline \return})
+(def parse-json-whitespace (char-satisfies json-whitespace-chars))
+(def skip-whitespace (skip-many parse-json-whitespace))
+(defn trim
+  [p]
+  (surrounded-by skip-whitespace p skip-whitespace))
+
 (def parse-json-object-key
   (domonad parser-m
     [s parse-json-string]
@@ -79,27 +85,26 @@
     [_ (string "null")]
     nil))
 
-
 (declare parse-json-value)
 (def parse-json-key-value
   (domonad parser-m
     [k parse-json-object-key
-     _ (is-char \:)
+     _ (trim (is-char \:))
      v parse-json-value]
     {k v}))
 
 (def parse-json-object
   (domonad parser-m
-    [_ (is-char \{)
-     kvs (sep-by parse-json-key-value (is-char \,))
-     _ (is-char \})]
+    [_ (trim (is-char \{))
+     kvs (sep-by parse-json-key-value (trim (is-char \,)))
+     _ (trim (is-char \}))]
     (reduce merge (cons {} kvs))))
 
 (def parse-json-array
   (domonad parser-m
-    [_ (is-char \[)
-     vs (sep-by parse-json-value (is-char \,))
-     _ (is-char \])]
+    [_ (trim (is-char \[))
+     vs (sep-by parse-json-value (trim (is-char \,)))
+     _ (trim (is-char \]))]
      (into [] vs)))
 
 (def parse-json-value
