@@ -1,7 +1,7 @@
 (ns examples.json
   (:require [clojure.algo.monads :refer [domonad]])
-  (:require [parsero.core :refer [parser-m m-plus-parser]])
-  (:require [parsero.combinators :refer [char-satisfies is-char any-char many sep-by number string skip-many surrounded-by]]))
+  (:require [parsero.core :refer [parser-m m-plus-parser m-result-parser]])
+  (:require [parsero.combinators :refer [char-satisfies is-char any-char unsigned-number number many sep-by string skip-many surrounded-by]]))
 
 
 (def parse-json-quotation-mark (is-char \"))
@@ -55,8 +55,46 @@
      _ (is-char \")]
     s))
 
-; TODO: JSON standard compliant
-(def parse-json-number number)
+(def parse-json-number-fraction
+  (m-plus-parser
+    (domonad parser-m
+      [_ (is-char \.)
+       n unsigned-number]
+      (fn [r]
+        (let [op (if (>= r 0) + -)]
+          (op r (/ n (Math/pow 10 (count (str n))))))))
+    (m-result-parser identity)))
+
+(def parse-json-number-exponent
+  (m-plus-parser
+    (domonad parser-m
+      [_ (char-satisfies #{\e \E})
+       n number]
+      (fn [r]
+        (* r (Math/pow 10 n))))
+    (m-result-parser identity)))
+
+(def parse-json-number-sign
+  (m-plus-parser
+    (domonad parser-m
+      [_ (is-char \-)]
+      -)
+    (m-result-parser identity)))
+
+(def parse-json-number-integral
+  (m-plus-parser
+    (domonad parser-m
+      [_ (is-char \0)]
+      0)
+    number))
+
+(def parse-json-number
+  (domonad parser-m
+    [s parse-json-number-sign
+     i parse-json-number-integral
+     f parse-json-number-fraction
+     e parse-json-number-exponent]
+    (-> (s i) f e)))
 
 (def json-whitespace-chars #{\space \tab \newline \return})
 (def parse-json-whitespace (char-satisfies json-whitespace-chars))
