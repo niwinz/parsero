@@ -1,11 +1,9 @@
 (ns parsero.combinators
-  (:require [clojure.algo.monads :refer [domonad]])
-  (:require [parsero.core :refer [parser-m m-plus-parser m-result-parser any-char]]))
-
+  (:require [parsero.core :refer [parser one-of gives any-char]]))
 
 (defn char-satisfies
   [pred]
-  (domonad parser-m
+  (parser
     [x any-char
      :when (pred x)]
     x))
@@ -17,26 +15,26 @@
 (def digit (char-satisfies #(Character/isDigit %)))
 (def lower (char-satisfies #(Character/isLowerCase %)))
 (def upper (char-satisfies #(Character/isUpperCase %)))
-(def letter (m-plus-parser lower upper))
-(def alphanumeric (m-plus-parser letter digit))
+(def letter (one-of lower upper))
+(def alphanumeric (one-of letter digit))
 
 (defn many
   "Given a parser, return another that
   tries to apply it to the input string
   as many times as possible."
   [p]
-  (m-plus-parser
-    (domonad parser-m
+  (one-of
+    (parser
       [x p
        xs (many p)]
       (cons x xs))
-    (m-result-parser [])))
+    (gives [])))
 
 (defn many1
   "Like `many` but it fails if the given
   parser doesn't succeed at least once."
   [p]
-  (domonad parser-m
+  (parser
     [x p
      xs (many p)]
     (cons x xs)))
@@ -44,14 +42,14 @@
 (def word (many1 letter))
 
 (def unsigned-number
-  (domonad parser-m
+  (parser
     [digits (many1 digit)]
     (reduce #(+ (* 10 %1) %2)
       (map #(- (int %) (int \0)) digits))))
 
 (def number
-  (m-plus-parser
-    (domonad parser-m
+  (one-of
+    (parser
       [_ (is-char \-)
        n unsigned-number]
        (- n))
@@ -61,39 +59,39 @@
   "Create a parser that parses the given string."
   [s]
   (if (empty? s)
-    (m-result-parser "")
+    (gives "")
     (let [char-p (char-satisfies #(= (first s) %))]
-      (domonad parser-m
+      (parser
         [x char-p
          xs (string (.substring s 1))]
         (str x xs)))))
 
 (defn drop-first
   [fp sp]
-  (domonad parser-m
+  (parser
     [_ fp
      x sp]
      x))
 
 (defn sep-by
   [p sep-p]
-  (m-plus-parser
-    (domonad parser-m
+  (one-of
+    (parser
       [x p
        xs (many (drop-first sep-p p))]
       (cons x xs))
-    (m-result-parser [])))
+    (gives [])))
 
 (defn sep-by1
   [p sep-p]
-  (domonad parser-m
+  (parser
     [x p
      xs (many1 (drop-first sep-p p))]
     (cons x xs)))
 
 (defn surrounded-by
   [prefix-p p suffix-p]
-  (domonad parser-m
+  (parser
     [_ prefix-p
      x p
      _ suffix-p]
@@ -101,15 +99,15 @@
 
 (defn skip-many
   [p]
-  (m-plus-parser
-    (domonad parser-m
+  (one-of
+    (parser
       [_ (many p)]
       nil)
-    (m-result-parser nil)))
+    (gives nil)))
 
 (defn skip-many1
   [p]
-  (domonad parser-m
+  (parser
     [_ (many1 p)]
     nil))
 

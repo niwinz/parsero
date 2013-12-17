@@ -1,7 +1,6 @@
 (ns parsero.core-test
   (:require [clojure.test :refer [deftest testing is]]
-            [clojure.algo.monads :refer [domonad]]
-            [parsero.core :refer [parser-m any-char raw-parse parse-error?]]
+            [parsero.core :refer [parser any-char raw-parse parse-error?]]
             [parsero.combinators :refer [is-char many letter]]))
 
 
@@ -13,7 +12,7 @@
       (second r))))
 
 (def letters-and-newlines
-  (domonad parser-m
+  (parser
     [_ (many letter)
      _ (is-char \newline)]
     nil))

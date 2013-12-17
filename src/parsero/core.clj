@@ -1,8 +1,8 @@
 (ns parsero.core
-  (:require [clojure.algo.monads :refer [defmonad]]))
+  (:require [clojure.algo.monads :refer [defmonad domonad]]))
 
 
-(defrecord Pstring [string line col])
+(defrecord PosString [string line col])
 
 (defn- is-newline?
   [c]
@@ -25,7 +25,7 @@
   [pstr new-s consumed-s]
   (let [old-line (:line pstr)
         old-col (:col pstr)]
-    (Pstring.
+    (PosString.
       new-s
       (line-after-consuming old-line consumed-s)
       (col-after-consuming old-col consumed-s))))
@@ -33,11 +33,11 @@
 (def parse-error ::parse-error)
 (def parse-error? (partial = parse-error))
 
-(defn m-result-parser
+(defn- m-result-parser
   [v]
   (fn [pst] (list v pst)))
 
-(defn m-bind-parser
+(defn- m-bind-parser
   [p f]
   (fn [pstring-s]
     (let [result (p pstring-s)]
@@ -48,11 +48,11 @@
           (nparser npstring))
         parse-error))))
 
-(defn m-zero-parser
+(defn- m-zero-parser
   [s]
   parse-error)
 
-(defn m-plus-parser
+(defn- m-plus-parser
   [& ps]
   (fn [s]
     (let [pvs (map #(% s) ps)
@@ -69,14 +69,14 @@
 
 (defn parse
   [p s]
-  (let [r (p (Pstring. s 0 0))]
+  (let [r (p (PosString. s 0 0))]
     (if-not (parse-error? r)
       (first r)
       r)))
 
 (defn raw-parse
   [p s]
-  (p (Pstring. s 0 0)))
+  (p (PosString. s 0 0)))
 
 (defn parsed-value-and-remainder
   [p s]
@@ -99,3 +99,12 @@
               pst
               new-s
               consumed-s)))))
+
+(def one-of m-plus-parser)
+
+(def gives m-result-parser)
+
+(defmacro parser [bindings res]
+  `(domonad parser-m
+    ~bindings
+    ~res))
