@@ -1,6 +1,6 @@
 # parsero
 
-.. image:: https://api.travis-ci.org/alejandrogomez/parsero.png?branch=master
+![](https://api.travis-ci.org/alejandrogomez/parsero.png?branch=master)
 
 Parser combinator library inspired by Haskell's [Parsec](http://hackage.haskell.org/package/parsec).
 
