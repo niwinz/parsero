@@ -1,14 +1,14 @@
 (ns examples.json
-  (:require [parsero.core :refer [parser one-of gives any-char]])
+  (:require [parsero.core :refer [parse parser one-of gives any-char]])
   (:require [parsero.combinators :refer [char-satisfies is-char unsigned-number number many sep-by string skip-many surrounded-by]]))
 
 
-(def parse-json-quotation-mark (is-char \"))
+(def json-quotation-mark (is-char \"))
 
 (def hex-chars #{\0 \1 \2 \3 \4 \5 \6 \7 \8 \9 \a \A \b \B \c \C \d \D \e \E \f \F})
-(def parse-hex-char (char-satisfies hex-chars))
+(def hex-char (char-satisfies hex-chars))
 
-(def parse-json-string-char
+(def json-string-char
   (char-satisfies #(and (not= % \") (not= % \\))))
 
 (def escape-chars {\" "\""
@@ -19,42 +19,42 @@
                    \n \newline
                    \r \return
                    \t \tab})
-(def parse-json-escaped-char
+(def json-escaped-char
   (parser
     [_ (is-char \\)
      c any-char
      :when (escape-chars c)]
     (escape-chars c)))
 
-(def parse-json-unicode-code-point
+(def json-unicode-code-point
   (parser
     [u (is-char \u)
-     a parse-hex-char
-     b parse-hex-char
-     c parse-hex-char
-     d parse-hex-char]
+     a hex-char
+     b hex-char
+     c hex-char
+     d hex-char]
     (char (Integer/parseInt (str a b c d) 16))))
 
-(def parse-json-char
+(def json-char
   (one-of
-    parse-json-string-char
-    parse-json-escaped-char
-    parse-json-unicode-code-point))
+    json-string-char
+    json-escaped-char
+    json-unicode-code-point))
 
-(def parse-json-string-without-delimiters
+(def json-string-without-delimiters
   (parser
-    [c parse-json-char
-     cs (many parse-json-char)]
+    [c json-char
+     cs (many json-char)]
     (apply str (cons c cs))))
 
-(def parse-json-string
+(def json-string
   (parser
     [_ (is-char \")
-     s parse-json-string-without-delimiters
+     s json-string-without-delimiters
      _ (is-char \")]
     s))
 
-(def parse-json-number-fraction
+(def json-number-fraction
   (one-of
     (parser
       [_ (is-char \.)
@@ -64,7 +64,7 @@
           (op r (/ n (Math/pow 10 (count (str n))))))))
     (gives identity)))
 
-(def parse-json-number-exponent
+(def json-number-exponent
   (one-of
     (parser
       [_ (char-satisfies #{\e \E})
@@ -73,83 +73,85 @@
         (* r (Math/pow 10 n))))
     (gives identity)))
 
-(def parse-json-number-sign
+(def json-number-sign
   (one-of
     (parser
       [_ (is-char \-)]
       -)
     (gives identity)))
 
-(def parse-json-number-integral
+(def json-number-integral
   (one-of
     (parser
       [_ (is-char \0)]
       0)
     number))
 
-(def parse-json-number
+(def json-number
   (parser
-    [s parse-json-number-sign
-     i parse-json-number-integral
-     f parse-json-number-fraction
-     e parse-json-number-exponent]
+    [s json-number-sign
+     i json-number-integral
+     f json-number-fraction
+     e json-number-exponent]
     (-> (s i) f e)))
 
 (def json-whitespace-chars #{\space \tab \newline \return})
-(def parse-json-whitespace (char-satisfies json-whitespace-chars))
-(def skip-whitespace (skip-many parse-json-whitespace))
+(def json-whitespace (char-satisfies json-whitespace-chars))
+(def skip-whitespace (skip-many json-whitespace))
 (defn trim
   [p]
   (surrounded-by skip-whitespace p skip-whitespace))
 
-(def parse-json-object-key
+(def json-object-key
   (parser
-    [s parse-json-string]
+    [s json-string]
     s))
 
-(def parse-json-true
+(def json-true
   (parser
     [_ (string "true")]
     true))
 
-(def parse-json-false
+(def json-false
   (parser
     [_ (string "false")]
     false))
 
-(def parse-json-null
+(def json-null
   (parser
     [_ (string "null")]
     nil))
 
-(declare parse-json-value)
-(def parse-json-key-value
+(declare json-value)
+(def json-key-value
   (parser
-    [k parse-json-object-key
+    [k json-object-key
      _ (trim (is-char \:))
-     v parse-json-value]
+     v json-value]
     {k v}))
 
-(def parse-json-object
+(def json-object
   (parser
     [_ (trim (is-char \{))
-     kvs (sep-by parse-json-key-value (trim (is-char \,)))
+     kvs (sep-by json-key-value (trim (is-char \,)))
      _ (trim (is-char \}))]
     (reduce merge (cons {} kvs))))
 
-(def parse-json-array
+(def json-array
   (parser
     [_ (trim (is-char \[))
-     vs (sep-by parse-json-value (trim (is-char \,)))
+     vs (sep-by json-value (trim (is-char \,)))
      _ (trim (is-char \]))]
      (into [] vs)))
 
-(def parse-json-value
+(def json-value
   (one-of
-    parse-json-string
-    parse-json-number
-    parse-json-true
-    parse-json-false
-    parse-json-null
-    parse-json-object
-    parse-json-array))
+    json-string
+    json-number
+    json-true
+    json-false
+    json-null
+    json-object
+    json-array))
+
+(def parse-json (partial parse json-value))
