@@ -106,4 +106,19 @@
      _ suffix-p]
      x))
 
-; TODO: chainl, chainr, skip, skip1, spaces
+(defn skip-many
+  [p]
+  (m-plus-parser
+    (domonad parser-m
+      [_ (many p)]
+      nil)
+    (m-result-parser nil)))
+
+(defn skip-many1
+  [p]
+  (domonad parser-m
+    [_ (many1 p)]
+    nil))
+
+; TODO: chainl, chainr, spaces
+

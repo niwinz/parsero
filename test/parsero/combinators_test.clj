@@ -1,7 +1,7 @@
 (ns parsero.combinators-test
   (:require [clojure.test :refer [deftest testing is]]
             [parsero.core :refer [parse-error?]]
-            [parsero.combinators :refer [any-char is-char letter digit many many1 sep-by sep-by1 surrounded-by]]))
+            [parsero.combinators :refer [any-char is-char letter digit many many1 sep-by sep-by1 surrounded-by skip-many skip-many1]]))
 
 (def comma (is-char \,))
 
@@ -18,6 +18,15 @@
   (testing "A combinator that applies a parser repeatedly at least once before it fails"
     (is (= '((\A) " ") ((many1 letter) "A ")))
     (is (parse-error? ((many1 digit) "Abc")))))
+
+(deftest skip-many-test
+  (testing "A combinator that applies a parser repeatedly until it fails discarding its results"
+    (is (= '(nil " c") ((skip-many letter) "Ab c")))))
+
+(deftest skip-many1-test
+  (testing "A combinator that applies a parser repeatedly at least once until it fails discarding its results"
+    (is (= '(nil " c") ((skip-many1 letter) "Ab c")))
+    (is (parse-error? ((skip-many1 digit) "Ab c")))))
 
 (deftest sep-by-test
   (testing "A combinator that takes yields the result of a parser while discarding the separator at least once until it fails"
