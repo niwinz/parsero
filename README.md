@@ -1,6 +1,8 @@
 # parsero
 
-A Clojure library designed to ... well, that part is up to you.
+.. image:: https://api.travis-ci.org/alejandrogomez/parsero.png?branch=master
+
+Parser combinator library inspired by Haskell's [Parsec](http://hackage.haskell.org/package/parsec).
 
 ## Usage
 
