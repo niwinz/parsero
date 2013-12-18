@@ -1,4 +1,5 @@
 (ns examples.arithmetic
+  (:require [clojure.algo.monads :refer [defmonad domonad]])
   (:require [parsero.core :refer [parser one-of parse]])
   (:require [parsero.combinators :refer [is-char number chainl1 space skip-many]]))
 
