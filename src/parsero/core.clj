@@ -1,6 +1,7 @@
 (ns parsero.core
   (:require [clojure.algo.monads :refer [defmonad domonad]]))
 
+; TODO: error reporting
 
 (defrecord PosString [string line col])
 
