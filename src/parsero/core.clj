@@ -33,11 +33,7 @@
 
 (defrecord ParseError [line col])
 
-(defn parse-error?
-  [v]
-  (or
-    (instance? ParseError v)
-    (= ::parse-error v)))
+(def parse-error? (partial instance? ParseError))
 
 (defn- m-result-parser
   [v]
@@ -75,9 +71,7 @@
 
 (defn- parse-error-msg
   [e]
-  (if (instance? ParseError e)
-    (str "Parse error in line " (:line e) " and column " (:col e))
-    "Parse error"))
+  (str "Parse error in line " (:line e) " and column " (:col e)))
 
 (defn parse
   [p s]
