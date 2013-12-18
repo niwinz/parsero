@@ -1,6 +1,7 @@
 (ns examples.json
   (:require [parsero.core :refer [parse parser one-of gives any-char]])
-  (:require [parsero.combinators :refer [char-satisfies is-char unsigned-number number many sep-by string skip-many surrounded-by]]))
+  (:require [parsero.combinators :refer [char-satisfies is-char unsigned-number number many sep-by
+                                         string skip-many surrounded-by times]]))
 
 
 (def json-quotation-mark (is-char \"))
@@ -19,33 +20,36 @@
                    \n \newline
                    \r \return
                    \t \tab})
-(def json-escaped-char
+
+(def json-escaped-special-char
   (parser
-    [_ (is-char \\)
-     c any-char
+    [c any-char
      :when (escape-chars c)]
     (escape-chars c)))
 
 (def json-unicode-code-point
   (parser
     [u (is-char \u)
-     a hex-char
-     b hex-char
-     c hex-char
-     d hex-char]
-    (char (Integer/parseInt (str a b c d) 16))))
+     cs (times 4 hex-char)]
+    (char (Integer/parseInt (apply str cs) 16))))
+
+(def json-escaped-char
+  (parser
+    [_ (is-char \\)
+     c (one-of
+          json-escaped-special-char
+          json-unicode-code-point)]
+    c))
 
 (def json-char
   (one-of
     json-string-char
-    json-escaped-char
-    json-unicode-code-point))
+    json-escaped-char))
 
 (def json-string-without-delimiters
   (parser
-    [c json-char
-     cs (many json-char)]
-    (apply str (cons c cs))))
+    [cs (many json-char)]
+    (apply str cs)))
 
 (def json-string
   (parser
