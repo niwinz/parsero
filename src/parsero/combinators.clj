@@ -12,6 +12,7 @@
   [^Character c]
   (char-satisfies #(= c %)))
 
+(def space (is-char \space))
 (def digit (char-satisfies #(Character/isDigit %)))
 (def lower (char-satisfies #(Character/isLowerCase %)))
 (def upper (char-satisfies #(Character/isUpperCase %)))
@@ -121,3 +122,17 @@
       [x p
        xs (times (dec n) p)]
       (cons x xs))))
+
+
+; Parser a -> Parser (a -> a -> a) -> Parser a
+(defn chainl1
+  [p op]
+  (parser
+    [a p
+     r (one-of
+         (parser
+           [f op
+            b p]
+           (f a b))
+         (gives a))]
+    r))
