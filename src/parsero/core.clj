@@ -31,8 +31,13 @@
       (line-after-consuming old-line consumed-s)
       (col-after-consuming old-col consumed-s))))
 
-(def parse-error ::parse-error)
-(def parse-error? (partial = parse-error))
+(defrecord ParseError [line col])
+
+(defn parse-error?
+  [v]
+  (or
+    (instance? ParseError v)
+    (= ::parse-error v)))
 
 (defn- m-result-parser
   [v]
@@ -47,11 +52,11 @@
               nparser (f res)
               npstring (second result)]
           (nparser npstring))
-        parse-error))))
+        (ParseError. (:line pstring-s) (:col pstring-s))))))
 
 (defn- m-zero-parser
-  [s]
-  parse-error)
+  [pst]
+  (ParseError. (:line pst) (:col pst)))
 
 (defn- m-plus-parser
   [& ps]
@@ -59,7 +64,7 @@
     (let [pvs (map #(% s) ps)
           v (first (drop-while parse-error? pvs))]
       (if (nil? v)
-        parse-error
+        (ParseError. (:line s) (:col s))
         v))))
 
 (defmonad parser-m
@@ -68,12 +73,18 @@
    m-zero   m-zero-parser
    m-plus   m-plus-parser])
 
+(defn- parse-error-msg
+  [e]
+  (if (instance? ParseError e)
+    (str "Parse error in line " (:line e) " and column " (:col e))
+    "Parse error"))
+
 (defn parse
   [p s]
   (let [r (p (PosString. s 0 0))]
     (if-not (parse-error? r)
       (first r)
-      r)))
+      (throw (Exception. (parse-error-msg r))))))
 
 (defn raw-parse
   [p s]
@@ -90,7 +101,7 @@
   "Accepts a single character."
   [pst]
   (if (empty? (:string pst))
-    (m-zero-parser (:string pst))
+    (m-zero-parser pst)
     (let [s (:string pst)
           r (first s)
           new-s (.substring s 1)
