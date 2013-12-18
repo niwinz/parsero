@@ -113,3 +113,11 @@
 
 ; TODO: chainl, chainr, spaces
 
+(defn times
+  [n p]
+  (if (<= n 0)
+    (gives [])
+    (parser
+      [x p
+       xs (times (dec n) p)]
+      (cons x xs))))

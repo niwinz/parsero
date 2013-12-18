@@ -1,7 +1,8 @@
 (ns parsero.combinators-test
   (:require [clojure.test :refer [deftest testing is]]
             [parsero.core :refer [parse-error? any-char parsed-value-and-remainder]]
-            [parsero.combinators :refer [is-char letter digit many many1 sep-by sep-by1 surrounded-by skip-many skip-many1]]))
+            [parsero.combinators :refer [is-char letter digit many many1 sep-by sep-by1
+                                         surrounded-by skip-many skip-many1 times]]))
 
 (def comma (is-char \,))
 
@@ -42,3 +43,9 @@
   (testing "A combinator that consumes a prefix and suffix ignoring them"
     (is (parse-error? (parsed-value-and-remainder (surrounded-by comma letter comma) ",A")))
     (is (= '(\A "") (parsed-value-and-remainder (surrounded-by comma letter comma) ",A,")))))
+
+(deftest times-test
+  (testing "A combinator that applies a parser a number of times and returns a list of result"
+    (is (= '(() "Abc") (parsed-value-and-remainder (times 0 digit) "Abc")))
+    (is (= '((\A \b) "c") (parsed-value-and-remainder (times 2 letter) "Abc")))
+    (is (parse-error? (parsed-value-and-remainder (times 4 letter) "Abc")))))
